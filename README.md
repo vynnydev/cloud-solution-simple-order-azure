@@ -36,7 +36,8 @@ plaintext
 
 Copiar código
 
- `┌──────────────────────────────┐
+ ```
+ ┌──────────────────────────────┐
                         │        GitHub Actions        │
                         │       (CI/CD Pipeline)       │
                         └─────────────┬────────────────┘
@@ -121,7 +122,8 @@ Copiar código
                      │     Message Broker         │
                      │  Azure Service Bus / Event │
                      │ Hub for async messaging    │
-                     └────────────────────────────┘`
+                     └────────────────────────────┘
+```
 
 Descrição dos Componentes da Arquitetura
 ----------------------------------------
