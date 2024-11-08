@@ -177,10 +177,6 @@ Descrição dos Componentes da Arquitetura
 Plano de GitFlow para Migração da SimpleOrder
 ---------------------------------------------------------------------
 
-### **GitFlow para a Migração da SimpleOrder**
-
-* * * * *
-
 Para organizar o desenvolvimento, migração e integração contínua, foi estruturado o seguinte plano de **GitFlow** com a adição de um ambiente de **staging**.
 
 ### Estrutura de Branches
