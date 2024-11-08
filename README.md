@@ -177,32 +177,157 @@ Descrição dos Componentes da Arquitetura
 Plano de GitFlow para Migração da SimpleOrder
 ---------------------------------------------------------------------
 
-Para garantir um desenvolvimento organizado e a integração contínua de novas funcionalidades e melhorias, foi implementado um plano de GitFlow com a seguinte estrutura de branches e fluxo de trabalho:
+### **GitFlow para a Migração da SimpleOrder**
+
+* * * * *
+
+Para organizar o desenvolvimento, migração e integração contínua, foi estruturado o seguinte plano de **GitFlow** com a adição de um ambiente de **staging**.
 
 ### Estrutura de Branches
 
-1.  **Main**: Contém a versão de produção mais recente da aplicação.
-2.  **Develop**: Branch principal de desenvolvimento, onde as funcionalidades são integradas antes de serem promovidas para `main`.
-3.  **Feature**: Branches de funcionalidades específicas, criadas a partir de `develop`, para o desenvolvimento de novas funcionalidades isoladas.
-4.  **Release**: Usada para testes finais e ajustes antes de promover o código para `main`.
-5.  **Hotfix**: Criada a partir de `main` para correções urgentes em produção, com integração posterior em `develop`.
+1.  **Main**: Branch principal que contém o código de produção.
+2.  **Develop**: Branch onde as funcionalidades são integradas antes de serem promovidas para produção.
+3.  **Feature**: Branches específicas para o desenvolvimento de novas funcionalidades, criadas a partir de `develop`.
+4.  **Release**: Usada para o teste final e ajustes antes de lançar o código para `main`.
+5.  **Hotfix**: Criada a partir de `main` para correções urgentes em produção.
+6.  **Staging**: Criada a partir de `develop` para testes e validação em ambiente de staging.
 
 ### Fluxo de Trabalho
 
-1.  **Desenvolvimento de Funcionalidades (Feature Branches)**\
-    As novas funcionalidades são desenvolvidas em branches `feature`, criadas a partir de `develop`. Cada branch possui um PR revisado antes de ser integrado à `develop`.
+1.  **Desenvolvimento de Funcionalidades (Feature Branches)**
 
-2.  **Integração e Testes na Branch Develop**\
-    Todas as features são integradas e testadas na branch `develop`, garantindo que o sistema funcione corretamente.
+    -   Cada funcionalidade será desenvolvida em uma branch separada de `develop` (exemplo: `feature/novafuncionalidade`).
+    -   Após o desenvolvimento, um Pull Request (PR) será feito para integrar a feature na branch `develop`.
+2.  **Integração e Testes na Branch Develop**
 
-3.  **Preparação para Lançamento (Release Branches)**\
-    Quando todas as funcionalidades planejadas estão na `develop`, uma branch `release` é criada para revisão final antes de fundir com `main`.
+    -   A branch `develop` será usada para integração de todas as funcionalidades e execução de testes automatizados.
+    -   Após o desenvolvimento das funcionalidades, `develop` será testada localmente e em ambientes como staging.
+3.  **Preparação para Lançamento (Release Branches)**
 
-4.  **Deploy para Produção (Merge to Main)**\
-    Após a aprovação, a `release` é fundida na `main`, acionando o pipeline CI/CD para deploy no AKS.
+    -   Quando a branch `develop` estiver pronta para o lançamento, uma nova branch `release` será criada (exemplo: `release/v1.0`).
+    -   Os ajustes finais são feitos na branch `release`, com os testes de staging realizados.
+4.  **Deploy para Produção (Merge to Main)**
 
-5.  **Correções de Emergência (Hotfix Branches)**\
-    Para problemas críticos em produção, uma branch `hotfix` é criada diretamente a partir de `main` e integrada de volta em `main` e `develop`.
+    -   Após testes finais e revisão na branch `release`, a branch será fundida com `main`, acionando o pipeline para deploy no ambiente de produção.
+5.  **Correções de Emergência (Hotfix Branches)**
+
+    -   Se houver algum erro crítico em produção, uma branch `hotfix` será criada diretamente de `main` (exemplo: `hotfix/corrige-erro`), corrigindo o problema e integrando de volta a `main` e `develop`.
+6.  **Staging**
+
+    -   **Staging** é usado como ambiente de teste final. Após o merge de `develop` para `staging`, o código é implantado neste ambiente para validação antes da promoção para `main`.
+
+* * * * *
+
+### **Pipeline de CI/CD com Deploy para AKS e Infraestrutura com Terraform**
+
+Aqui está o pipeline que cobre desde a parte de integração até o deploy automatizado usando **Terraform** e **Docker** para a aplicação PHP, com o ambiente **Staging** incluído:
+
+1.  **Desencadeador do Pipeline**:
+
+    -   O pipeline é acionado por qualquer commit ou merge nas branches `feature`, `release`, ou `develop`.
+2.  **Stages do Pipeline**:
+
+#### **1\. Build Docker**
+
+-   **Ação**: Build da imagem Docker para a aplicação PHP.
+-   **Comando**:
+
+    bash
+
+    Copiar código
+
+    `docker build -t simpleorder-php-app .
+    docker tag simpleorder-php-app:latest <aws_account_id>.dkr.ecr.<region>.amazonaws.com/simpleorder-php-app:latest
+    docker push <aws_account_id>.dkr.ecr.<region>.amazonaws.com/simpleorder-php-app:latest`
+
+#### **2\. Infraestrutura com Terraform**
+
+-   **Ação**: Provisionamento da infraestrutura necessária usando **Terraform**.
+-   **Comandos**:
+
+    bash
+
+    Copiar código
+
+    `terraform init
+    terraform plan -out=tfplan
+    terraform apply tfplan`
+
+#### **3\. Deploy no Ambiente Staging**
+
+-   **Ação**: Desdobramento no ambiente **Staging** após merge para a branch `staging`.
+-   **Comando**:
+    -   Subir a imagem Docker para o ambiente de staging no Kubernetes:
+
+    bash
+
+    Copiar código
+
+    `kubectl config use-context <staging-context>
+    kubectl set image deployment/simpleorder simpleorder-php-app=<aws_account_id>.dkr.ecr.<region>.amazonaws.com/simpleorder-php-app:latest
+    kubectl rollout status deployment/simpleorder`
+
+#### **4\. Testes no Staging**
+
+-   **Ação**: Testes automatizados de integração no ambiente de staging.
+-   **Comandos**:
+
+    bash
+
+    Copiar código
+
+    `npm run test`
+
+#### **5\. Deploy para Produção**
+
+-   **Ação**: Após a aprovação dos testes em Staging, merge da branch `release` para `main` e deploy automático no ambiente de produção.
+-   **Comando**:
+
+    bash
+
+    Copiar código
+
+    `kubectl config use-context <prod-context>
+    kubectl set image deployment/simpleorder simpleorder-php-app=<aws_account_id>.dkr.ecr.<region>.amazonaws.com/simpleorder-php-app:latest
+    kubectl rollout status deployment/simpleorder`
+
+#### **6\. Monitoramento e Alerta**
+
+-   **Ação**: Após o deploy, monitoramento de logs e métricas da aplicação com ferramentas como **CloudWatch**, **Prometheus**, ou **Grafana**.
+
+* * * * *
+
+### **Diagrama do Fluxo de GitFlow e Pipeline**
+
+plaintext
+
+Copiar código
+
+```
++------------------+
+          |    Develop       |
+          +------------------+
+                |
+                |  Merge to Staging
+                v
+          +------------------+
+          |    Staging       |
+          +------------------+
+                |
+                |  Merge to Release
+                v
+          +------------------+
+          |    Release       |
+          +------------------+
+                |
+                |  Merge to Main (Deploy)
+                v
+          +------------------+
+          |     Main         |
+          +------------------+
+```
+
+O fluxo começa com o desenvolvimento em `feature` branches, passando por testes em `staging`, até o deploy final em `main` para produção.
 
 O GitFlow ajuda a garantir uma integração e implantação contínuas, com segurança e controle de qualidade nas entregas.
 
