@@ -116,22 +116,7 @@
                      └────────────────────────────┘
 ```
 
-### Diferenças:
-
-1.  **Mercado Regulamentado**:
-
-    -   É estabelecido por leis ou regulamentos governamentais.
-    -   As empresas são obrigadas a cumprir limites de emissão de carbono.
-    -   Exemplos incluem o Sistema de Comércio de Emissões da UE e o Cap-and-Trade na Califórnia.
-2.  **Mercado Voluntário**:
-
-    -   Funciona sem imposições legais.
-    -   Empresas ou indivíduos participam para atingir metas de sustentabilidade ou responsabilidade social.
-    -   Os créditos de carbono são comprados para compensar emissões voluntariamente.
-
-### Setor Excluído:
-
-De acordo com a proposta de regulação do mercado de carbono brasileiro, um setor que foi excluído da regulação, permanecendo no segmento voluntário, é o **setor de agricultura**. Este setor ainda pode participar de iniciativas voluntárias para compensação de carbono.Descrição dos Componentes da Arquitetura
+Descrição dos Componentes da Arquitetura
 ----------------------------------------
 
 1.  **Pipeline CI/CD (GitHub Actions)**\
