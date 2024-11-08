@@ -116,6 +116,39 @@
                      └────────────────────────────┘
 ```
 
+Plano de GitFlow para Migração da SimpleOrder para a Nova Arquitetura
+---------------------------------------------------------------------
+
+Para garantir um desenvolvimento organizado e a integração contínua de novas funcionalidades e melhorias, foi implementado um plano de GitFlow com a seguinte estrutura de branches e fluxo de trabalho:
+
+### Estrutura de Branches
+
+1.  **Main**: Contém a versão de produção mais recente da aplicação.
+2.  **Develop**: Branch principal de desenvolvimento, onde as funcionalidades são integradas antes de serem promovidas para `main`.
+3.  **Feature**: Branches de funcionalidades específicas, criadas a partir de `develop`, para o desenvolvimento de novas funcionalidades isoladas.
+4.  **Release**: Usada para testes finais e ajustes antes de promover o código para `main`.
+5.  **Hotfix**: Criada a partir de `main` para correções urgentes em produção, com integração posterior em `develop`.
+
+### Fluxo de Trabalho
+
+1.  **Desenvolvimento de Funcionalidades (Feature Branches)**\
+    As novas funcionalidades são desenvolvidas em branches `feature`, criadas a partir de `develop`. Cada branch possui um PR revisado antes de ser integrado à `develop`.
+
+2.  **Integração e Testes na Branch Develop**\
+    Todas as features são integradas e testadas na branch `develop`, garantindo que o sistema funcione corretamente.
+
+3.  **Preparação para Lançamento (Release Branches)**\
+    Quando todas as funcionalidades planejadas estão na `develop`, uma branch `release` é criada para revisão final antes de fundir com `main`.
+
+4.  **Deploy para Produção (Merge to Main)**\
+    Após a aprovação, a `release` é fundida na `main`, acionando o pipeline CI/CD para deploy no AKS.
+
+5.  **Correções de Emergência (Hotfix Branches)**\
+    Para problemas críticos em produção, uma branch `hotfix` é criada diretamente a partir de `main` e integrada de volta em `main` e `develop`.
+
+Esse GitFlow garante um fluxo organizado de desenvolvimento, com integração contínua, testes completos, e implementação rápida e segura na Microsoft Azure.
+
+
 Descrição dos Componentes da Arquitetura
 ----------------------------------------
 
