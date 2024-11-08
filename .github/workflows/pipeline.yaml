@@ -1,0 +1,117 @@
+# .github/workflows/ci-cd-pipeline.yml
+name: CI/CD Pipeline for SimpleOrder
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - staging  # Adicionando o evento de push para a branch de staging
+  pull_request:
+    branches:
+      - develop
+      - main
+      - staging  # Adicionando o PR para a branch de staging
+
+jobs:
+  terraform_infrastructure:
+    name: Provision Infrastructure with Terraform
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' # Atualizando para incluir staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.10
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+
+      - name: Terraform Apply
+        id: apply
+        run: terraform apply -auto-approve
+        working-directory: ./terraform
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+  docker_build_push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: terraform_infrastructure
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Log in to Azure Container Registry
+        run: echo "${{ secrets.AZURE_CONTAINER_REGISTRY_PASSWORD }}" | docker login ${{ secrets.AZURE_CONTAINER_REGISTRY_URL }} -u ${{ secrets.AZURE_CONTAINER_REGISTRY_USERNAME }} --password-stdin
+
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.AZURE_CONTAINER_REGISTRY_URL }}/simpleorder-app:${{ github.sha }} .
+
+      - name: Push Docker Image
+        run: docker push ${{ secrets.AZURE_CONTAINER_REGISTRY_URL }}/simpleorder-app:${{ github.sha }}
+
+  deploy_to_staging:
+    name: Deploy to Staging Environment
+    runs-on: ubuntu-latest
+    needs: docker_build_push
+    if: github.ref == 'refs/heads/staging'  # Só executa para a branch de staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v1
+        with:
+          version: 'v1.20.0'
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get AKS Credentials
+        run: az aks get-credentials --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name ${{ secrets.AZURE_AKS_CLUSTER_NAME }}
+
+      - name: Deploy to Staging AKS
+        run: |
+          kubectl set image deployment/simpleorder-app simpleorder-app=${{ secrets.AZURE_CONTAINER_REGISTRY_URL }}/simpleorder-app:${{ github.sha }}
+          kubectl rollout status deployment/simpleorder-app
+
+  deploy_to_production:
+    name: Deploy to Production Environment
+    runs-on: ubuntu-latest
+    needs: docker_build_push
+    if: github.ref == 'refs/heads/main'  # Só executa para a branch de produção (main)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v1
+        with:
+          version: 'v1.20.0'
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get AKS Credentials
+        run: az aks get-credentials --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name ${{ secrets.AZURE_AKS_CLUSTER_NAME }}
+
+      - name: Deploy to Production AKS
+        run: |
+          kubectl set image deployment/simpleorder-app simpleorder-app=${{ secrets.AZURE_CONTAINER_REGISTRY_URL }}/simpleorder-app:${{ github.sha }}
+          kubectl rollout status deployment/simpleorder-app
