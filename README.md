@@ -221,75 +221,76 @@ Aqui está o pipeline que cobre desde a parte de integração até o deploy auto
 1.  **Desencadeador do Pipeline**:
 
     -   O pipeline é acionado por qualquer commit ou merge nas branches `feature`, `release`, ou `develop`.
+
 2.  **Stages do Pipeline**:
 
-#### **1\. Build Docker**
+    #### **1\. Build Docker**
 
--   **Ação**: Build da imagem Docker para a aplicação PHP.
--   **Comando**:
+    -   **Ação**: Build da imagem Docker para a aplicação PHP.
+    -   **Comando**:
 
-    bash
+        bash
 
-    Copiar código
+        Copiar código
 
-    `docker build -t simpleorder-php-app .
-    docker tag simpleorder-php-app:latest <aws_account_id>.dkr.ecr.<region>.amazonaws.com/simpleorder-php-app:latest
-    docker push <aws_account_id>.dkr.ecr.<region>.amazonaws.com/simpleorder-php-app:latest`
+        `docker build -t simpleorder-php-app .
+        docker tag simpleorder-php-app:latest <aws_account_id>.dkr.ecr.<region>.amazonaws.com/simpleorder-php-app:latest
+        docker push <aws_account_id>.dkr.ecr.<region>.amazonaws.com/simpleorder-php-app:latest`
 
-#### **2\. Infraestrutura com Terraform**
+    #### **2\. Infraestrutura com Terraform**
 
--   **Ação**: Provisionamento da infraestrutura necessária usando **Terraform**.
--   **Comandos**:
+    -   **Ação**: Provisionamento da infraestrutura necessária usando **Terraform**.
+    -   **Comandos**:
 
-    bash
+        bash
 
-    Copiar código
+        Copiar código
 
-    `terraform init
-    terraform plan -out=tfplan
-    terraform apply tfplan`
+        `terraform init
+        terraform plan -out=tfplan
+        terraform apply tfplan`
 
-#### **3\. Deploy no Ambiente Staging**
+    #### **3\. Deploy no Ambiente Staging**
 
--   **Ação**: Desdobramento no ambiente **Staging** após merge para a branch `staging`.
--   **Comando**:
-    -   Subir a imagem Docker para o ambiente de staging no Kubernetes:
+    -   **Ação**: Desdobramento no ambiente **Staging** após merge para a branch `staging`.
+    -   **Comando**:
+        -   Subir a imagem Docker para o ambiente de staging no Kubernetes:
 
-    bash
+        bash
 
-    Copiar código
+        Copiar código
 
-    `kubectl config use-context <staging-context>
-    kubectl set image deployment/simpleorder simpleorder-php-app=<aws_account_id>.dkr.ecr.<region>.amazonaws.com/simpleorder-php-app:latest
-    kubectl rollout status deployment/simpleorder`
+        `kubectl config use-context <staging-context>
+        kubectl set image deployment/simpleorder simpleorder-php-app=<aws_account_id>.dkr.ecr.<region>.amazonaws.com/simpleorder-php-app:latest
+        kubectl rollout status deployment/simpleorder`
 
-#### **4\. Testes no Staging**
+    #### **4\. Testes no Staging**
 
--   **Ação**: Testes automatizados de integração no ambiente de staging.
--   **Comandos**:
+    -   **Ação**: Testes automatizados de integração no ambiente de staging.
+    -   **Comandos**:
 
-    bash
+        bash
 
-    Copiar código
+        Copiar código
 
-    `npm run test`
+        `npm run test`
 
-#### **5\. Deploy para Produção**
+    #### **5\. Deploy para Produção**
 
--   **Ação**: Após a aprovação dos testes em Staging, merge da branch `release` para `main` e deploy automático no ambiente de produção.
--   **Comando**:
+    -   **Ação**: Após a aprovação dos testes em Staging, merge da branch `release` para `main` e deploy automático no ambiente de produção.
+    -   **Comando**:
 
-    bash
+        bash
 
-    Copiar código
+        Copiar código
 
-    `kubectl config use-context <prod-context>
-    kubectl set image deployment/simpleorder simpleorder-php-app=<aws_account_id>.dkr.ecr.<region>.amazonaws.com/simpleorder-php-app:latest
-    kubectl rollout status deployment/simpleorder`
+        `kubectl config use-context <prod-context>
+        kubectl set image deployment/simpleorder simpleorder-php-app=<aws_account_id>.dkr.ecr.<region>.amazonaws.com/simpleorder-php-app:latest
+        kubectl rollout status deployment/simpleorder`
 
-#### **6\. Monitoramento e Alerta**
+    #### **6\. Monitoramento e Alerta**
 
--   **Ação**: Após o deploy, monitoramento de logs e métricas da aplicação com ferramentas como **CloudWatch**, **Prometheus**, ou **Grafana**.
+    -   **Ação**: Após o deploy, monitoramento de logs e métricas da aplicação com ferramentas como **CloudWatch**, **Prometheus**, ou **Grafana**.
 
 * * * * *
 
