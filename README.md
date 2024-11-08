@@ -1,34 +1,42 @@
-# Arquitetura Completa da Solução SimpleOrder na Microsoft Azure
+Arquitetura Completa da Solução SimpleOrder na Microsoft Azure
+==============================================================
 
-## Visão Geral do Projeto
+Visão Geral do Projeto
+----------------------
 
-**Nome da Aplicação:** SimpleOrder  
+**Nome da Aplicação:** SimpleOrder\
 **Objetivo da Migração:** Modernizar a aplicação SimpleOrder, que atualmente opera com uma arquitetura monolítica LAMP (Linux, Apache, MySQL, PHP) em um único servidor local, migrando para a Microsoft Azure para obter os seguintes benefícios:
-- **Escalabilidade**: Suporte a aumento de carga com recursos de escalabilidade automática.
-- **Segurança**: Implementação de autenticação avançada, criptografia e gestão de segredos.
-- **Análise e Armazenamento de Dados**: Capacidade de gerar relatórios e insights dos dados com ferramentas de análise e armazenamento adequados.
-- **Inteligência Artificial**: Uso de IA para personalização e recomendações de produtos.
 
-## Benefícios e Melhorias da Migração para Azure
+-   **Escalabilidade**: Suporte a aumento de carga com recursos de escalabilidade automática.
+-   **Segurança**: Implementação de autenticação avançada, criptografia e gestão de segredos.
+-   **Análise e Armazenamento de Dados**: Capacidade de gerar relatórios e insights dos dados com ferramentas de análise e armazenamento adequados.
+-   **Inteligência Artificial**: Uso de IA para personalização e recomendações de produtos.
 
-1. **Escalabilidade e Alta Disponibilidade**  
-   Com o uso do **Azure Kubernetes Service (AKS)** e **Azure SQL Database**, a aplicação poderá escalar automaticamente conforme a demanda, sem depender de um único servidor físico. O AKS permite orquestração de contêineres, facilitando o gerenciamento e escalabilidade dos microserviços.
+Benefícios e Melhorias da Migração para Azure
+---------------------------------------------
 
-2. **Segurança**  
-   A aplicação utilizará **Azure Active Directory (AAD)** para autenticação centralizada e **Azure Key Vault** para gestão segura de segredos e chaves. Essa infraestrutura de segurança elimina vulnerabilidades de acesso, implementando autenticação multifator e políticas de segurança.
+1.  **Escalabilidade e Alta Disponibilidade**\
+    Com o uso do **Azure Kubernetes Service (AKS)** e **Azure SQL Database**, a aplicação poderá escalar automaticamente conforme a demanda, sem depender de um único servidor físico. O AKS permite orquestração de contêineres, facilitando o gerenciamento e escalabilidade dos microserviços.
 
-3. **Armazenamento de Dados e Relatórios**  
-   O uso de **Azure SQL Database** e **Azure Cosmos DB** permite um armazenamento mais robusto e flexível, com capacidade para gerar relatórios detalhados e acessar dados rapidamente para tomada de decisão. O **Azure Synapse Analytics** facilita a análise de dados e geração de insights.
+2.  **Segurança**\
+    A aplicação utilizará **Azure Active Directory (AAD)** para autenticação centralizada e **Azure Key Vault** para gestão segura de segredos e chaves. Essa infraestrutura de segurança elimina vulnerabilidades de acesso, implementando autenticação multifator e políticas de segurança.
 
-4. **Inteligência Artificial para Recomendação de Produtos**  
-   Com **Azure Machine Learning**, a aplicação poderá oferecer recomendações de produtos baseadas em histórico de pedidos, melhorando a experiência do cliente e promovendo produtos de forma personalizada.
+3.  **Armazenamento de Dados e Relatórios**\
+    O uso de **Azure SQL Database** e **Azure Cosmos DB** permite um armazenamento mais robusto e flexível, com capacidade para gerar relatórios detalhados e acessar dados rapidamente para tomada de decisão. O **Azure Synapse Analytics** facilita a análise de dados e geração de insights.
 
----
+4.  **Inteligência Artificial para Recomendação de Produtos**\
+    Com **Azure Machine Learning**, a aplicação poderá oferecer recomendações de produtos baseadas em histórico de pedidos, melhorando a experiência do cliente e promovendo produtos de forma personalizada.
 
-## Diagrama de Arquitetura
+* * * * *
 
-```plaintext
-                        ┌──────────────────────────────┐
+Diagrama de Arquitetura
+-----------------------
+
+plaintext
+
+Copiar código
+
+ `┌──────────────────────────────┐
                         │        GitHub Actions        │
                         │       (CI/CD Pipeline)       │
                         └─────────────┬────────────────┘
@@ -78,10 +86,10 @@
    - orders                       - inventory                   - reports
      (id, cliente_id,             - produtos                   - log_reports
      produto_id,                    (id, nome, preco)          - analytics_data
-     quantidade,                                                 
-     data_pedido)                                            
-   - clientes                                              
-     (id, nome, email)                          
+     quantidade,
+     data_pedido)
+   - clientes
+     (id, nome, email)
 
         ┌─────────────────────────────┬───────────────────────────────┐
                                       │
@@ -108,46 +116,12 @@
                         │      Azure Machine Learning │
                         │   (Product Recommendations) │
                         └─────────────────────────────┘
-                     
+
                      ┌────────────────────────────┐
                      │     Message Broker         │
                      │  Azure Service Bus / Event │
                      │ Hub for async messaging    │
-                     └────────────────────────────┘
-```
-
-Plano de GitFlow para Migração da SimpleOrder para a Nova Arquitetura
----------------------------------------------------------------------
-
-Para garantir um desenvolvimento organizado e a integração contínua de novas funcionalidades e melhorias, foi implementado um plano de GitFlow com a seguinte estrutura de branches e fluxo de trabalho:
-
-### Estrutura de Branches
-
-1.  **Main**: Contém a versão de produção mais recente da aplicação.
-2.  **Develop**: Branch principal de desenvolvimento, onde as funcionalidades são integradas antes de serem promovidas para `main`.
-3.  **Feature**: Branches de funcionalidades específicas, criadas a partir de `develop`, para o desenvolvimento de novas funcionalidades isoladas.
-4.  **Release**: Usada para testes finais e ajustes antes de promover o código para `main`.
-5.  **Hotfix**: Criada a partir de `main` para correções urgentes em produção, com integração posterior em `develop`.
-
-### Fluxo de Trabalho
-
-1.  **Desenvolvimento de Funcionalidades (Feature Branches)**\
-    As novas funcionalidades são desenvolvidas em branches `feature`, criadas a partir de `develop`. Cada branch possui um PR revisado antes de ser integrado à `develop`.
-
-2.  **Integração e Testes na Branch Develop**\
-    Todas as features são integradas e testadas na branch `develop`, garantindo que o sistema funcione corretamente.
-
-3.  **Preparação para Lançamento (Release Branches)**\
-    Quando todas as funcionalidades planejadas estão na `develop`, uma branch `release` é criada para revisão final antes de fundir com `main`.
-
-4.  **Deploy para Produção (Merge to Main)**\
-    Após a aprovação, a `release` é fundida na `main`, acionando o pipeline CI/CD para deploy no AKS.
-
-5.  **Correções de Emergência (Hotfix Branches)**\
-    Para problemas críticos em produção, uma branch `hotfix` é criada diretamente a partir de `main` e integrada de volta em `main` e `develop`.
-
-Esse GitFlow garante um fluxo organizado de desenvolvimento, com integração contínua, testes completos, e implementação rápida e segura na Microsoft Azure.
-
+                     └────────────────────────────┘`
 
 Descrição dos Componentes da Arquitetura
 ----------------------------------------
@@ -198,4 +172,43 @@ Descrição dos Componentes da Arquitetura
 
 * * * * *
 
-Essa documentação detalha todos os elementos necessários para migrar a aplicação SimpleOrder para a Azure, proporcionando uma solução moderna, escalável e segura.
+Plano de GitFlow para Migração da SimpleOrder
+---------------------------------------------
+
+O projeto utiliza GitFlow para o gerenciamento de branches e o desenvolvimento incremental:
+
+-   **Branches Principais**:
+    -   `main`: Versão de produção.
+    -   `develop`: Desenvolvimento contínuo, com features integradas para revisão e testes.
+    -   **Feature Branches**: Criadas a partir de `develop` para cada nova funcionalidade.
+    -   **Release Branches**: Criadas para ajustes e testes antes da promoção para `main`.
+    -   **Hotfix Branches**: Criadas a partir de `main` para corrigir falhas em produção.
+
+O GitFlow ajuda a garantir uma integração e implantação contínuas, com segurança e controle de qualidade nas entregas.
+
+* * * * *
+
+Configuração e Implantação
+--------------------------
+
+1.  **Configuração do Ambiente Azure**:
+
+    -   Configurar recursos como AKS, ACR, SQL Database, Cosmos DB e Key Vault.
+    -   Integrar o Azure Active Directory para autenticação.
+2.  **Implantação com GitHub Actions**:
+
+    -   GitHub Actions é utilizado para construir, testar e implantar automaticamente os contêineres Docker.
+    -   Ao realizar o merge para `main`, o pipeline executa a implantação no AKS.
+
+* * * * *
+
+Contribuição
+------------
+
+Para contribuir com o projeto, siga o fluxo GitFlow descrito acima e abra um pull request para revisão. As contribuições devem ser documentadas e incluir testes para facilitar a integração com o sistema.
+
+* * * * *
+
+### Engenheiro Principal do Projeto
+
+Projeto liderado e arquitetado por **Vinicius Prudencio**.
