@@ -153,7 +153,7 @@ Para esta arquitetura baseada em microserviços, planejamos a separação lógic
 Plano de GitFlow para Migração da SimpleOrder
 ---------------------------------------------------------------------
 
-![Diagrama de Arquitetura](images/git-flow-pipeline.png)
+![Diagrama de Arquitetura](images/gitflow-pipeline.png)
 
 Para organizar o desenvolvimento, migração e integração contínua, foi estruturado o seguinte plano de **GitFlow** com a adição de um ambiente de **staging**.
 
