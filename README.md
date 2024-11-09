@@ -32,98 +32,7 @@ Benefícios e Melhorias da Migração para Azure
 Diagrama de Arquitetura
 -----------------------
 
-plaintext
-
-Copiar código
-
- ```
-                        ┌──────────────────────────────┐
-                        │        GitHub Actions        │
-                        │       (CI/CD Pipeline)       │
-                        └─────────────┬────────────────┘
-                                      │
-                           ┌──────────▼───────────┐
-                           │      Build &         │
-                           │ Push Docker Images   │
-                           │ to Azure Container   │
-                           │ Registry (ACR)       │
-                           └──────────┬───────────┘
-                                      │
-                        ┌─────────────▼──────────────┐
-                        │    Deploy Docker Images    │
-                        │   to AKS (Azure Kubernetes │
-                        │   Service)                 │
-                        └─────────────┬──────────────┘
-                                      │
-                        ┌─────────────▼──────────────┐
-                        │     Azure Front Door       │
-                        │     (Traffic Mgmt)         │
-                        └─────────────┬──────────────┘
-                                      │
-                           ┌──────────▼───────────┐
-                           │   Azure Load Balancer│
-                           │  (App Balancing)     │
-                           └──────────┬───────────┘
-                                      │
-                    ┌─────────────────▼─────────────────┐
-                    │         Application Layer         │
-                    │       (Azure Kubernetes Service)  │
-                    └───────────────────────────────────┘
-                                      │
-        ┌─────────────────────────────┼───────────────────────────────┐
-        │                             │                               │
-┌───────▼────────┐            ┌───────▼─────────┐          ┌─────────▼────────┐
-│Order Management│            │   Inventory      │          │     Reporting    │
-│  Microservice  │            │   Microservice   │          │    Microservice  │
-└────────────────┘            └──────────────────┘          └──────────────────┘
-        │                             │                               │
-        │                             │                               │
-  ┌─────▼───────┐               ┌─────▼───────┐              ┌───────▼────────┐
-  │Azure SQL    │               │Azure SQL    │              │ Azure Cosmos    │
-  │Database     │               │Database     │              │ DB / Table      │
-  └─────────────┘               └─────────────┘              │ Storage         │
-        │                             │                      │ (Reporting)     │
-  Tabelas:                      Tabelas:                      Tabelas:
-   - orders                       - inventory                   - reports
-     (id, cliente_id,             - produtos                   - log_reports
-     produto_id,                    (id, nome, preco)          - analytics_data
-     quantidade,
-     data_pedido)
-   - clientes
-     (id, nome, email)
-
-        ┌─────────────────────────────┬───────────────────────────────┐
-                                      │
-                        ┌─────────────▼───────────────┐
-                        │        Azure Key Vault      │
-                        │      (Secrets Management)   │
-                        └─────────────┬───────────────┘
-                                      │
-                        ┌─────────────▼───────────────┐
-                        │      Azure Active Directory │
-                        │      (Auth Management)      │
-                        └─────────────┬───────────────┘
-                                      │
-               ┌──────────────────────▼────────────────────────┐
-               │             Data & Analytics Layer            │
-               └───────────────────────────────────────────────┘
-                                      │
-                        ┌─────────────▼───────────────┐
-                        │     Azure Synapse Analytics │
-                        │      (Data Analysis)        │
-                        └─────────────┬───────────────┘
-                                      │
-                        ┌─────────────▼───────────────┐
-                        │      Azure Machine Learning │
-                        │   (Product Recommendations) │
-                        └─────────────────────────────┘
-
-                     ┌────────────────────────────┐
-                     │     Message Broker         │
-                     │  Azure Service Bus / Event │
-                     │ Hub for async messaging    │
-                     └────────────────────────────┘
-```
+![Diagrama de Arquitetura](images/simple-order-infraestructure-normal.png)
 
 Descrição dos Componentes da Arquitetura
 ----------------------------------------
@@ -172,10 +81,79 @@ Descrição dos Componentes da Arquitetura
 
     -   **Azure Service Bus ou Event Hub**: Facilita a comunicação entre microserviços, melhorando a escalabilidade e resiliência da aplicação.
 
+Componentes planejados nas sub-redes:
+---------------------------------------------------------------------
+
+Para esta arquitetura baseada em microserviços, planejamos a separação lógica dos recursos em **sub-redes específicas**, garantindo segurança, organização e desempenho. Segue as sub-redes do projeto com suas respectivas finalidades:
+
+* * * * *
+
+### **Sub-redes necessárias**:
+
+#### 1\. **Sub-rede AKS (Azure Kubernetes Service)**
+
+-   **Descrição**: Contém o cluster de AKS que hospeda seus microserviços.
+-   **Justificativa**: AKS precisa de sua própria sub-rede para isolamento e escalabilidade.
+-   **Quantidade**: **1 sub-rede**.
+
+* * * * *
+
+#### 2\. **Sub-rede de Bancos de Dados**
+
+-   **Descrição**: Contém os bancos de dados **Azure SQL** e **Cosmos DB**.
+-   **Justificativa**: Isola os recursos de dados críticos, evitando que eles sejam acessados diretamente da internet.
+-   **Quantidade**: **1 sub-rede**.
+
+* * * * *
+
+#### 3\. **Sub-rede para Azure Service Bus/Event Hub (Mensageria)**
+
+-   **Descrição**: Abriga os serviços de mensageria, como o **Azure Service Bus** ou **Event Hub**.
+-   **Justificativa**: Garante que apenas os microserviços possam acessar os recursos de mensageria.
+-   **Quantidade**: **1 sub-rede**.
+
+* * * * *
+
+#### 4\. **Sub-rede de Gateway (Azure Front Door e Load Balancer)**
+
+-   **Descrição**: Contém o **Azure Front Door** e o **Azure Load Balancer**.
+-   **Justificativa**: Permite controle do tráfego de entrada e saída, com segurança e redundância.
+-   **Quantidade**: **1 sub-rede**.
+
+* * * * *
+
+#### 5\. **Sub-rede para Serviços de Análise e Machine Learning**
+
+-   **Descrição**: Contém os serviços como **Azure Synapse Analytics** e **Azure Machine Learning**.
+-   **Justificativa**: Isolamento dos recursos de processamento de dados e aprendizado de máquina, que geralmente consomem muitos recursos.
+-   **Quantidade**: **1 sub-rede**.
+
+* * * * *
+
+#### 6\. **Sub-rede de Monitoramento e Gestão**
+
+-   **Descrição**: Contém recursos de monitoramento como **Azure Monitor**, **Application Insights** e logs (caso você use **Azure Log Analytics**).
+-   **Justificativa**: Centraliza o monitoramento e mantém logs organizados e seguros.
+-   **Quantidade**: **1 sub-rede**.
+
+* * * * *
+
+### **Resumo: Total de sub-redes necessárias**
+
+-   **6 sub-redes**:
+    1.  Sub-rede AKS.
+    2.  Sub-rede Bancos de Dados.
+    3.  Sub-rede Mensageria (Service Bus/Event Hub).
+    4.  Sub-rede Gateway (Front Door/Load Balancer).
+    5.  Sub-rede Análise e Machine Learning.
+    6.  Sub-rede Monitoramento e Gestão.
+
 * * * * *
 
 Plano de GitFlow para Migração da SimpleOrder
 ---------------------------------------------------------------------
+
+![Diagrama de Arquitetura](images/git-flow-pipeline.png)
 
 Para organizar o desenvolvimento, migração e integração contínua, foi estruturado o seguinte plano de **GitFlow** com a adição de um ambiente de **staging**.
 
@@ -214,7 +192,8 @@ Para organizar o desenvolvimento, migração e integração contínua, foi estru
 
 * * * * *
 
-### **Pipeline de CI/CD com Deploy para AKS e Infraestrutura com Terraform**
+Pipeline de CI/CD com Deploy para AKS e Infraestrutura com Terraform
+----------------------------------------------------------------------
 
 Aqui está o pipeline que cobre desde a parte de integração até o deploy automatizado usando **Terraform** e **Docker** para a aplicação PHP, com o ambiente **Staging** incluído:
 
@@ -295,33 +274,39 @@ Aqui está o pipeline que cobre desde a parte de integração até o deploy auto
 * * * * *
 
 ### **Diagrama do Fluxo de GitFlow e Pipeline**
+----------------------------------------------------------------------------
 
 plaintext
 
 Copiar código
-
 ```
-          +------------------+
-          |    Develop       |
-          +------------------+
-                |
-                |  Merge to Staging
-                v
-          +------------------+
-          |    Staging       |
-          +------------------+
-                |
-                |  Merge to Release
-                v
-          +------------------+
-          |    Release       |
-          +------------------+
-                |
-                |  Merge to Main (Deploy)
-                v
-          +------------------+
-          |     Main         |
-          +------------------+
+          +-------------------------+
+          |        Feature          |
+          +-------------------------+
+                     |
+                     | PR / Merge
+                     v
+          +-------------------------+
+          |       Develop           |
+          +-------------------------+
+                     |
+                     | Merge to Staging (Deploy)
+                     v
+          +-------------------------+
+          |        Staging          |
+          +-------------------------+
+                     |
+                     | Merge to Release
+                     v
+          +-------------------------+
+          |        Release          |
+          +-------------------------+
+                     |
+                     | Merge to Main (Deploy)
+                     v
+          +-------------------------+
+          |         Main            |
+          +-------------------------+
 ```
 
 O fluxo começa com o desenvolvimento em `feature` branches, passando por testes em `staging`, até o deploy final em `main` para produção.
@@ -331,7 +316,7 @@ O GitFlow ajuda a garantir uma integração e implantação contínuas, com segu
 * * * * *
 
 Configuração e Implantação
---------------------------
+-----------------------------
 
 1.  **Configuração do Ambiente Azure**:
 
@@ -345,7 +330,7 @@ Configuração e Implantação
 * * * * *
 
 Contribuição
-------------
+--------------
 
 Para contribuir com o projeto, siga o fluxo GitFlow descrito acima e abra um pull request para revisão. As contribuições devem ser documentadas e incluir testes para facilitar a integração com o sistema.
 
